@@ -1,17 +1,76 @@
 
-var ws = new WebSocket("ws://localhost:8888")
-, pollFreq = 50;
+const pollFreq = 50;
 
-ws.onopen = function() {
-	console.log("Connection established!");
-	setInterval(sendInput, pollFreq);
+var ws = null
+, pollInterval = null
+, statusP = null
+, setupForm = null
+, joinButton = null
+, canvas = null;
+
+function status(msg) {
+	if (statusP) {
+		statusP.textContent = msg;
+	}
+}
+
+function log(msg) {
+	console.log(msg);
+	status(msg);
+}
+
+window.onload = function() {
+	statusP = document.getElementById("status");
+	setupForm = document.getElementById("setup");
+	joinButton = document.getElementById("join");
+	canvas = document.getElementById("canvas");
+
+	joinButton.onclick = function() {
+		var host = document.getElementById("host").value
+		, port = document.getElementById("port").value
+		, name = document.getElementById("name").value;
+
+		joinGame(host, port, name);
+	};
 };
 
-ws.onmessage = function(msg) {
-	var state = JSON.parse(msg.data);
-	console.log(state);
-	drawGame(state);
-};
+function joinGame(host, port, name) {
+	log("Connecting to " + host + ":" + port + " ...");
+	ws = new WebSocket("ws://" + host + ":" + port);
+
+	ws.onopen = function() {
+		log("Connection established! Joining as " + name + " ...");
+		ws.send(JSON.stringify(
+				{
+					msg: "join",
+					name: name
+				}
+			));
+	};
+
+	ws.onmessage = function(message) {
+		message = JSON.parse(message.data);
+		switch (message.msg) {
+			
+		case "state":
+			drawGame(message);
+			if (!pollInterval) {
+				startGame();
+			}
+			break;
+			
+		default:
+			log("Invalid msg");
+		}
+	};
+}
+
+function startGame() {
+	log("Starting game ...");
+	pollInterval = setInterval(sendInput, pollFreq);
+	canvas.style.display = "block";
+	setupForm.style.display = "none";
+}
 
 // images
 
@@ -49,12 +108,27 @@ function drawGame(state) {
 		}
 	);
 
+	var maxPoints = Math.max.apply(
+		{},
+		state.players.map(
+			function(player) {
+				return player.points;
+			}
+		)
+	);
+	
 	// draw players
 	state.players.forEach(
 		function(player, playerIndex) {
 			var playerImg = playerImgs[playerIndex % playerImgs.length];
 			context.save();
 			context.translate(player.x * tileWidth + (tileWidth / 2), player.y * tileWidth + (tileWidth / 2));
+
+			context.fillStyle = "rgba(0, 0, 0, 0.5)";
+			context.font = player.points == maxPoints ? "bold 14px Ubuntu" : "12px Ubuntu";
+			context.textAlign = "center";
+			context.fillText(player.name + ": " + player.points, 0, -32);
+
 			context.rotate(player.angle);
 			context.drawImage(playerImg, -tileWidth / 2, -tileWidth / 2);
 			context.restore();
@@ -62,13 +136,20 @@ function drawGame(state) {
 	);
 
 	// draw tops & flops
-
 	state.topsFlops.forEach(
 		function(topFlop) {
 			var topFlopImg = topFlop.topFlop == "top" ? topImg : flopImg;
 			context.drawImage(topFlopImg, topFlop.x * tileWidth, topFlop.y * tileWidth);
 		}
 	);
+
+	// show scores
+	var scores = state.players.map(
+		function(player) {
+			return player.name + " (" + player.index + "): " + player.points;
+		}
+	).join(", ");
+	status(scores + " (" + Math.round(state.countdown) + "s left)");
 }
 
 // send input
@@ -78,7 +159,8 @@ function sendInput() {
 		w: !!pressed[87],
 		a: !!pressed[65],
 		s: !!pressed[83],
-		d: !!pressed[68]
+		d: !!pressed[68],
+		msg: "input"
 	};
 	ws.send(JSON.stringify(wasd));
 }
