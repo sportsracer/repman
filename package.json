@@ -1,0 +1,21 @@
+{
+	"name": "repman",
+	"version": "0.1.0",
+	"author": "Steffen Wenz <steffenwenz@gmail.com>",
+	"description": "Reputation Management reloaded!",
+	"scripts": {
+		   "start": "node main.js"
+	},
+	"repository": {
+		      "type": "git",
+		      "url": "https://github.com/sportsracer/repman.git"
+	},
+	"dependencies": {
+			"traits": "0.4.x",
+			"ws": "0.4.x"
+	},
+	"engine": {
+		  "node": ">=0.6.12"
+	}
+
+}
