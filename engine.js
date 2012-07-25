@@ -184,5 +184,7 @@ if (typeof exports !== "undefined") {
 	exports.makePlayer = makePlayer;
 	exports.makeWall = makeWall;
 	exports.makeTopFlop = makeTopFlop;
+	exports.worldWidth = worldWidth;
+	exports.worldHeight = worldHeight;
 }
 

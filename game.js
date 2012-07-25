@@ -7,10 +7,11 @@ if (typeof require !== "undefined") {
 var gamePrototype = {
 
 	addPlayer: function(name) {
-		var player = engine.makePlayer(
+		var pos = this.getRandomPosition()
+		, player = engine.makePlayer(
 			{
-				x: 8,
-				y: 8,
+				x: pos.x,
+				y: pos.y,
 				points: 0,
 				index: this.players.length,
 				name: name
@@ -28,6 +29,24 @@ var gamePrototype = {
 		this.players[playerIndex].input(input.w, input.a, input.s, input.d);	
 	},
 
+	getRandomPosition: function() {
+		while(true) {
+			var x = Math.round(Math.random() * engine.worldWidth)
+			, y = Math.round(Math.random() * engine.worldHeight)
+			, occupied = false;
+
+			this.walls.forEach(
+				function(wall) {
+					occupied = occupied || wall.x() == x && wall.y() == y;
+				}, this
+			);
+
+			if (!occupied) {
+				return { x: x, y: y };
+			}
+		}
+	},
+
 	tick: function() {
 		var now = Date.now()
 		, dt = this.lastTick != null ? (now - this.lastTick) / 1000.0 : 0;
@@ -38,8 +57,14 @@ var gamePrototype = {
 				var collectedTopsFlops = player.collect(this.topsFlops);
 				collectedTopsFlops.forEach(
 					function(topFlop) {
-						var topFlopIndex = this.topsFlops.indexOf(topFlop);
+						var topFlopIndex = this.topsFlops.indexOf(topFlop)
+						, type = this.topsFlops[topFlopIndex].topFlop()
+						, pos = this.getRandomPosition()
+						, that = this;
 						this.topsFlops.splice(topFlopIndex, 1);
+						setTimeout(function() {
+								   that.topsFlops.push(engine.makeTopFlop({x: pos.x, y: pos.y, topFlop: type}));
+							   }, 2000);
 					},
 					this
 				);
@@ -59,7 +84,7 @@ var gamePrototype = {
 
 		this.lastTick = now;
 
-		this.countdown -= dt;
+		this.timer += dt;
 	},
 
 	getState: function() {
@@ -70,32 +95,17 @@ var gamePrototype = {
 			players: this.players.map(getState),
 			walls: this.walls.map(getState),
 			topsFlops: this.topsFlops.map(getState),
-			countdown: this.countdown
+			timer: this.timer
 		};
 	}
 };
 
 function makeGame() {
 
-	var walls = [
-		engine.makeWall({x: 4, y: 0}),
-		engine.makeWall({x: 4, y: 1}),
-		engine.makeWall({x: 4, y: 2}),
-		engine.makeWall({x: 4, y: 3}),
-		engine.makeWall({x: 8, y: 6}),
-		engine.makeWall({x: 9, y: 6}),
-		engine.makeWall({x: 10, y: 6}),
-		engine.makeWall({x: 11, y: 6})
-	];
+	var walls = []
+	, topsFlops = []
 
-	var topsFlops = [];
-
-	for (var i = 0; i < 10; ++i) {
-		topsFlops.push(engine.makeTopFlop({x: i, y: i, topFlop: "top"}));
-		topsFlops.push(engine.makeTopFlop({x: 31 - i, y: i, topFlop: "flop"}));
-	}
-
-	var gameProperties = {
+	, gameProperties = {
 		players: {
 			value: []
 		},
@@ -109,13 +119,27 @@ function makeGame() {
 			value: null,
 			writable: true
 		},
-		countdown: {
-			value: 60,
+		timer: {
+			value: 0,
 			writable: true
 		}
-	};
+	}
 
-	return Object.create(gamePrototype, gameProperties);
+	, game = Object.create(gamePrototype, gameProperties);
+
+	for (var i = 0; i < 8; i++) {
+		walls.push(engine.makeWall({x: 7, y: i + 10}));
+		walls.push(engine.makeWall({x: 15, y: i}));
+		walls.push(engine.makeWall({x: 23, y: i + 10}));
+	}
+
+	for (var i = 0; i < 8; ++i) {
+		var pos = game.getRandomPosition();
+		topsFlops.push(engine.makeTopFlop({x: pos.x, y: pos.y, topFlop: "top"}));
+		topsFlops.push(engine.makeTopFlop({x: pos.x, y: pos.y, topFlop: "flop"}));
+	}
+
+	return game;
 }
 
 if (typeof exports !== "undefined") {

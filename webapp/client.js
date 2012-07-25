@@ -2,7 +2,6 @@
 const pollFreq = 50;
 
 var ws = null
-, pollInterval = null
 , statusP = null
 , setupForm = null
 , joinButton = null
@@ -51,25 +50,23 @@ function joinGame(host, port, name) {
 	ws.onmessage = function(message) {
 		message = JSON.parse(message.data);
 		switch (message.msg) {
+
+		case "joined":
+			log("Joined as player " + message.playerIndex);
+			setInterval(sendInput, pollFreq);
+			canvas.style.display = "block";
+			setupForm.style.display = "none";
+			break;
 			
 		case "state":
+			console.log(message);
 			drawGame(message);
-			if (!pollInterval) {
-				startGame();
-			}
 			break;
 			
 		default:
 			log("Invalid msg");
 		}
 	};
-}
-
-function startGame() {
-	log("Starting game ...");
-	pollInterval = setInterval(sendInput, pollFreq);
-	canvas.style.display = "block";
-	setupForm.style.display = "none";
 }
 
 // images
@@ -149,7 +146,7 @@ function drawGame(state) {
 			return player.name + " (" + player.index + "): " + player.points;
 		}
 	).join(", ");
-	status(scores + " (" + Math.round(state.countdown) + "s left)");
+	status(scores + " (" + Math.round(state.timer) + "s)");
 }
 
 // send input

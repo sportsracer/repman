@@ -36,6 +36,15 @@ server.on("connection",
 					console.log("Player " + player.name() + " (" + player.index() + ") joined");
 					ws.player = player;
 					ws.game = game;
+
+					ws.send(
+						JSON.stringify(
+							{
+								msg: "joined",
+								playerIndex: player.index()
+							}
+						)
+					);
 					break;
 					
 				case "input":
