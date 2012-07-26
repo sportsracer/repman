@@ -31,8 +31,8 @@ var gamePrototype = {
 
 	getRandomPosition: function() {
 		while(true) {
-			var x = Math.round(Math.random() * engine.worldWidth)
-			, y = Math.round(Math.random() * engine.worldHeight)
+			var x = 1 + Math.round(Math.random() * (engine.worldWidth - 3))
+			, y = 1 + Math.round(Math.random() * (engine.worldHeight - 3))
 			, occupied = false;
 
 			this.walls.forEach(
