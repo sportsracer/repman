@@ -2,7 +2,12 @@
 var makeGame = require("./game").makeGame
 , WebSocketServer = require("ws").Server
 
-, server = new WebSocketServer({port: 8888})
+, server = new WebSocketServer(
+	{
+		host: "0.0.0.0",
+		port: 8888
+	}
+)
 , clients = []
 
 , game = makeGame();
