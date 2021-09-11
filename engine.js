@@ -1,6 +1,6 @@
 
 if (typeof require !== "undefined") {
-	var Trait = require("traits").Trait;	
+	var Trait = require("traits.js");
 }
 
 
