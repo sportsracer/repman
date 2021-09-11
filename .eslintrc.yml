@@ -1,0 +1,22 @@
+env:
+  browser: true
+  commonjs: true
+  node: true
+extends:
+  - google
+parserOptions:
+  ecmaVersion: 12
+  sourceType: module
+rules:
+
+  max-len:
+    - warn
+    - code: 120
+
+  valid-jsdoc:
+    - warn
+
+  new-cap:
+    - error
+    - capIsNewExceptions:
+        - Trait
