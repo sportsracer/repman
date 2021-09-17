@@ -1,88 +1,90 @@
-/* eslint no-invalid-this: ["off"] */
-
 const Trait = require('traits.js');
 
-const moveSpeedFactor = 4;
-const turnSpeedFactor = Math.PI;
+const playerMoveSpeed = 4;
+const playerTurnSpeed = Math.PI;
+const topFlopCollectDistance = 1;
 const worldWidth = 32;
 const worldHeight = 18;
 
 // state
 
+const TStateful = Trait({
+  get: Trait.required,
+  set: Trait.required,
+  getState: Trait.required,
+});
+
 /**
- * Construct a stateful trait, with getters and setters for individual properties.
+ * Construct a stateful trait, with getters and setters for individual properties. All game objects must store their
+ * state using this trait so that it can be serialized between client and server.
  * @param {Object} state Initial state
  * @return {Trait}
  */
 function makeState(state) {
-  return Trait(
-      {
-        get: function(property) {
-          return state[property];
-        },
-        set: function(property, value) {
-          state[property] = value;
-        },
-        getState: function() {
-          return state;
-        },
-      },
-  );
+  return Trait({
+    get(property) {
+      return state[property];
+    },
+    set(property, value) {
+      state[property] = value;
+    },
+    getState() {
+      return state;
+    },
+  });
 }
 
 /**
  * Helper method for adding a combined getter & setter method to a stateful trait.
  * @param {String} property Name of the property
  * @param {Object} defaultValue Default value which will be returned until a different value is set
- * @return {function} Combined getter & setter method which takes either no (getter) or one (setter) argument
+ * @return {Trait} Trait with combined getter & setter method which takes either no (getter) or one (setter) argument
  */
-function getterSetter(property, defaultValue) {
-  return function(value) {
-    if (typeof(value) == 'undefined') {
-      value = this.get(property);
-      return typeof(value) != 'undefined' ?
-        value :
-        defaultValue;
-    }
-    return this.set(property, value);
-  };
+function hasProperty(property, defaultValue=undefined) {
+  return Trait.compose(
+      TStateful,
+      Trait({
+        [property](value) {
+          if (typeof(value) == 'undefined') {
+            value = this.get(property);
+            return typeof(value) != 'undefined' ? value : defaultValue;
+          }
+          return this.set(property, value);
+        },
+      }),
+  );
 }
 
 // traits
 
-const TPosition = Trait(
-    {
-      get: Trait.required,
-      set: Trait.required,
-      x: getterSetter('x', 0),
-      y: getterSetter('y', 0),
-      angle: getterSetter('angle', 0),
-    },
+const THasPosition = Trait.compose(
+    TStateful,
+    hasProperty('x'),
+    hasProperty('y'),
 );
 
-const TPhysics = Trait(
-    {
-      get: Trait.required,
-      set: Trait.required,
-      angle: Trait.required,
-      colliding: getterSetter('colliding', false),
-      moveSpeed: getterSetter('moveSpeed', 0),
-      turnSpeed: getterSetter('turnSpeed', 0),
-      move: function(delta, walls) {
+const TMovable = Trait.compose(
+    THasPosition,
+    hasProperty('angle', 0),
+    hasProperty('colliding', false),
+    hasProperty('moveSpeed', 0),
+    hasProperty('turnSpeed', 0),
+    Trait({
+      /**
+       * Move and rotate this object, unless it would collide with a wall in the new position.
+       * @param {Number} delta
+       * @param {Array} walls
+       */
+      move(delta, walls) {
         const newX = this.x() + this.moveSpeed() * Math.cos(this.angle()) * delta;
         const newY = this.y() + this.moveSpeed() * Math.sin(this.angle()) * delta;
 
         // check for collisions
-
         const outOfGame = newX < 0 || newY < 0 || newX > (worldWidth - 1) || newY > (worldHeight - 1);
 
         this.colliding(
             walls.reduce(
-                function(colliding, wall) {
-                  return colliding || (Math.round(newX) === Math.round(wall.x()) &&
-                     Math.round(newY) === Math.round(wall.y())
-                  );
-                },
+                (colliding, wall) => colliding || wall.collidesWith(this),
                 outOfGame,
             ),
         );
@@ -94,31 +96,53 @@ const TPhysics = Trait(
 
         this.angle(this.angle() + this.turnSpeed() * delta);
       },
-    },
+    }),
 );
 
-const TWasd = Trait(
+const TControllableWithWasd = Trait(
     {
       moveSpeed: Trait.required,
       turnSpeed: Trait.required,
-      input: function(w, a, s, d) {
+      /**
+       * Adjust move and turn speed based on state of arrow keys.
+       * @param {Boolean} w
+       * @param {Boolean} a
+       * @param {Boolean} s
+       * @param {Boolean} d
+       */
+      input(w, a, s, d) {
         const move = Number(w);
         const turn = Number(d) - Number(a);
-        this.moveSpeed(move * moveSpeedFactor);
-        this.turnSpeed(turn * turnSpeedFactor);
+        this.moveSpeed(move * playerMoveSpeed);
+        this.turnSpeed(turn * playerTurnSpeed);
       },
     },
 );
 
-const TTopFlop = Trait(
-    {
-      get: Trait.required,
-      set: Trait.required,
-      angle: Trait.required,
-      moveSpeed: Trait.required,
-      turnSpeed: Trait.required,
-      topFlop: getterSetter('topFlop'),
-      randomize: function() {
+// objects
+
+const TWall = Trait.compose(
+    THasPosition,
+    Trait({
+    /**
+     * Determine whether a point collides with this wall.
+     * @param {Object} other
+     * @return {Boolean}
+     */
+      collidesWith(other) {
+        return Math.round(other.x()) === Math.round(this.x()) && Math.round(other.y()) === Math.round(this.y());
+      },
+    }),
+);
+
+const TTopFlop = Trait.compose(
+    TMovable,
+    hasProperty('topFlop'),
+    Trait({
+    /**
+     * Randomize this object's movement and direction.
+     */
+      randomize() {
         if (this.colliding()) {
           this.angle(this.angle() + Math.PI * 3 / 4 + 0.5 * Math.random() * Math.PI);
         }
@@ -127,16 +151,16 @@ const TTopFlop = Trait(
         this.moveSpeed(0.5);
         this.turnSpeed(Math.sin(seed / 1000));
       },
-    },
+    }),
 );
 
 /**
  * Calculate distance between points (x1, y1) and (x2, y2)
- * @param {number} x1
- * @param {number} y1
- * @param {number} x2
- * @param {number} y2
- * @return {number}
+ * @param {Number} x1
+ * @param {Number} y1
+ * @param {Number} x2
+ * @param {Number} y2
+ * @return {Number}
  */
 function getDistance(x1, y1, x2, y2) {
   const x = x2 - x1;
@@ -144,71 +168,69 @@ function getDistance(x1, y1, x2, y2) {
   return Math.sqrt(x * x + y * y);
 }
 
-const TPlayer = Trait(
-    {
-      get: Trait.required,
-      set: Trait.required,
-      x: Trait.required,
-      y: Trait.required,
-      index: getterSetter('index'),
-      name: getterSetter('name'),
-      points: getterSetter('points', 0),
-      collect: function(topsFlops) {
+const TPlayer = Trait.compose(
+    TMovable,
+    TControllableWithWasd,
+    hasProperty('index'),
+    hasProperty('name'),
+    hasProperty('points', 0),
+    Trait({
+      /**
+       * Collect tops and/or flops that are close to this player, and adjust points accordingly.
+       * @param {Array} topsFlops
+       * @return {Array} The tops & flops which were collected.
+       */
+      collect(topsFlops) {
         return topsFlops.filter(
-            function(topFlop) {
-              return getDistance(this.x(), this.y(), topFlop.x(), topFlop.y()) <= 1;
-            },
+            (topFlop) => getDistance(this.x(), this.y(), topFlop.x(), topFlop.y()) <= topFlopCollectDistance,
             this,
         ).map(
-            function(topFlop) {
+            (topFlop) => {
               const inc = topFlop.topFlop() === 'top' ? 1 : -1;
               this.points(this.points() + inc);
-              console.log('Player', this.index(), 'now has', this.points(), 'points');
+              console.log('Player %d now has %d points', this.index(), this.points());
               return topFlop;
             },
             this,
         );
       },
-    },
+    }),
 );
 
 // engine object constructors
 
 /**
- * Make a player object.
- * @param {Object} state Player state including x, y, points, index & name properties
- * @return {Object}
- */
-function makePlayer(state) {
-  return Trait.create(
-      Object.prototype,
-      Trait.compose(makeState(state), TPosition, TPhysics, TWasd, TPlayer),
-  );
-}
-
-/**
  * Make a wall.
- * @param {Object} state Wall state including x & y properties
+ * @param {Number} x
+ * @param {Number} y
  * @return {Object}
  */
-function makeWall(state) {
-  return Trait.create(
-      Object.prototype,
-      Trait.compose(makeState(state), TPosition),
-  );
+function makeWall(x, y) {
+  return Trait.create(Object.prototype, Trait.compose(makeState({x, y}), TWall));
 }
 
 /**
- * Create top/flop object.
- * @param {Object} state Top/flop state including x, y and topFlop property
+ * Make a top/flop object.
+ * @param {Number} x
+ * @param {Number} y
+ * @param {String} topFlop Either 'top' or 'flop'
  * @return {Object}
  */
-function makeTopFlop(state) {
-  state.angle = Math.random() * Math.PI * 2;
-  return Trait.create(
-      Object.prototype,
-      Trait.compose(makeState(state), TPosition, TPhysics, TTopFlop),
-  );
+function makeTopFlop(x, y, topFlop) {
+  const angle = Math.random() * Math.PI * 2;
+  return Trait.create(Object.prototype, Trait.compose(makeState({x, y, angle, topFlop}), TTopFlop));
+}
+
+/**
+ * Make a player.
+ * @param {Number} x
+ * @param {Number} y
+ * @param {Number} index
+ * @param {String} name
+ * @return {Object}
+ */
+function makePlayer(x, y, index, name) {
+  return Trait.create(Object.prototype, Trait.compose(makeState({x, y, index, name}), TPlayer));
 }
 
 exports.makePlayer = makePlayer;

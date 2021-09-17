@@ -6,15 +6,7 @@ const gamePrototype = {
 
   addPlayer: function(name) {
     const pos = this.getRandomPosition();
-    const player = engine.makePlayer(
-        {
-          x: pos.x,
-          y: pos.y,
-          points: 0,
-          index: this.players.length,
-          name: name,
-        },
-    );
+    const player = engine.makePlayer(pos.x, pos.y, this.players.length, name);
     this.players.push(player);
     return player;
   },
@@ -61,7 +53,7 @@ const gamePrototype = {
                 const that = this;
                 this.topsFlops.splice(topFlopIndex, 1);
                 setTimeout(function() {
-                  that.topsFlops.push(engine.makeTopFlop({x: pos.x, y: pos.y, topFlop: type}));
+                  that.topsFlops.push(engine.makeTopFlop(pos.x, pos.y, type));
                 }, 2000);
               },
               this,
@@ -129,15 +121,15 @@ function makeGame() {
   const game = Object.create(gamePrototype, gameProperties);
 
   for (let i = 0; i < 8; i++) {
-    walls.push(engine.makeWall({x: 7, y: i + 10}));
-    walls.push(engine.makeWall({x: 15, y: i}));
-    walls.push(engine.makeWall({x: 23, y: i + 10}));
+    walls.push(engine.makeWall(7, i + 10));
+    walls.push(engine.makeWall(15, i));
+    walls.push(engine.makeWall(23, i + 10));
   }
 
   for (let i = 0; i < 8; ++i) {
     const pos = game.getRandomPosition();
-    topsFlops.push(engine.makeTopFlop({x: pos.x, y: pos.y, topFlop: 'top'}));
-    topsFlops.push(engine.makeTopFlop({x: pos.x, y: pos.y, topFlop: 'flop'}));
+    topsFlops.push(engine.makeTopFlop(pos.x, pos.y, 'top'));
+    topsFlops.push(engine.makeTopFlop(pos.x, pos.y, 'flop'));
   }
 
   return game;
