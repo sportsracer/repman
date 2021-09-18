@@ -1,5 +1,7 @@
 const Trait = require('traits.js');
 
+const Position = require('./position');
+
 const playerMoveSpeed = 4;
 const playerTurnSpeed = Math.PI;
 const topFlopCollectDistance = 1;
@@ -59,8 +61,7 @@ function hasProperty(property, defaultValue=undefined) {
 
 const THasPosition = Trait.compose(
     TStateful,
-    hasProperty('x'),
-    hasProperty('y'),
+    hasProperty('pos'),
 );
 
 const TMovable = Trait.compose(
@@ -73,25 +74,26 @@ const TMovable = Trait.compose(
       /**
        * Move and rotate this object, unless it would collide with a wall in the new position.
        * @param {Number} delta
-       * @param {Array} walls
+       * @param {Object[]} walls
        */
       move(delta, walls) {
-        const newX = this.x() + this.moveSpeed() * Math.cos(this.angle()) * delta;
-        const newY = this.y() + this.moveSpeed() * Math.sin(this.angle()) * delta;
+        const moveDirection = Position.fromAngle(this.angle());
+        const moveDistance = this.moveSpeed() * delta;
+        const newPos = this.pos().add(moveDirection.scale(moveDistance));
 
         // check for collisions
-        const outOfGame = newX < 0 || newY < 0 || newX > (worldWidth - 1) || newY > (worldHeight - 1);
+        const outOfGame = newPos.x < 0 || newPos.y < 0 || newPos.x > (worldWidth - 1) || newPos.y > (worldHeight - 1);
 
         this.colliding(
             walls.reduce(
-                (colliding, wall) => colliding || wall.collidesWith(this),
+                (colliding, wall) => colliding || wall.collidesWith(newPos),
                 outOfGame,
             ),
         );
 
         // only move object if it wouldn't be colliding in the new position
         if (!this.colliding()) {
-          this.x(newX); this.y(newY);
+          this.pos(newPos);
         }
 
         this.angle(this.angle() + this.turnSpeed() * delta);
@@ -126,11 +128,11 @@ const TWall = Trait.compose(
     Trait({
     /**
      * Determine whether a point collides with this wall.
-     * @param {Object} other
+     * @param {Position} pos
      * @return {Boolean}
      */
-      collidesWith(other) {
-        return Math.round(other.x()) === Math.round(this.x()) && Math.round(other.y()) === Math.round(this.y());
+      collidesWith(pos) {
+        return Math.round(pos.x) === Math.round(this.pos().x) && Math.round(pos.y) === Math.round(this.pos().y);
       },
     }),
 );
@@ -139,9 +141,9 @@ const TTopFlop = Trait.compose(
     TMovable,
     hasProperty('topFlop'),
     Trait({
-    /**
-     * Randomize this object's movement and direction.
-     */
+      /**
+       * Randomize this object's movement and direction.
+       */
       randomize() {
         if (this.colliding()) {
           this.angle(this.angle() + Math.PI * 3 / 4 + 0.5 * Math.random() * Math.PI);
@@ -154,20 +156,6 @@ const TTopFlop = Trait.compose(
     }),
 );
 
-/**
- * Calculate distance between points (x1, y1) and (x2, y2)
- * @param {Number} x1
- * @param {Number} y1
- * @param {Number} x2
- * @param {Number} y2
- * @return {Number}
- */
-function getDistance(x1, y1, x2, y2) {
-  const x = x2 - x1;
-  const y = y2 - y1;
-  return Math.sqrt(x * x + y * y);
-}
-
 const TPlayer = Trait.compose(
     TMovable,
     TControllableWithWasd,
@@ -177,12 +165,12 @@ const TPlayer = Trait.compose(
     Trait({
       /**
        * Collect tops and/or flops that are close to this player, and adjust points accordingly.
-       * @param {Array} topsFlops
-       * @return {Array} The tops & flops which were collected.
+       * @param {Object[]} topsFlops
+       * @return {Object[]} The tops & flops which were collected.
        */
       collect(topsFlops) {
         return topsFlops.filter(
-            (topFlop) => getDistance(this.x(), this.y(), topFlop.x(), topFlop.y()) <= topFlopCollectDistance,
+            (topFlop) => this.pos().distanceTo(topFlop.pos()) <= topFlopCollectDistance,
             this,
         ).map(
             (topFlop) => {
@@ -206,7 +194,8 @@ const TPlayer = Trait.compose(
  * @return {Object}
  */
 function makeWall(x, y) {
-  return Trait.create(Object.prototype, Trait.compose(makeState({x, y}), TWall));
+  const pos = new Position(x, y);
+  return Trait.create(Object.prototype, Trait.compose(makeState({pos}), TWall));
 }
 
 /**
@@ -217,8 +206,9 @@ function makeWall(x, y) {
  * @return {Object}
  */
 function makeTopFlop(x, y, topFlop) {
+  const pos = new Position(x, y);
   const angle = Math.random() * Math.PI * 2;
-  return Trait.create(Object.prototype, Trait.compose(makeState({x, y, angle, topFlop}), TTopFlop));
+  return Trait.create(Object.prototype, Trait.compose(makeState({pos, angle, topFlop}), TTopFlop));
 }
 
 /**
@@ -230,7 +220,8 @@ function makeTopFlop(x, y, topFlop) {
  * @return {Object}
  */
 function makePlayer(x, y, index, name) {
-  return Trait.create(Object.prototype, Trait.compose(makeState({x, y, index, name}), TPlayer));
+  const pos = new Position(x, y);
+  return Trait.create(Object.prototype, Trait.compose(makeState({pos, index, name}), TPlayer));
 }
 
 exports.makePlayer = makePlayer;

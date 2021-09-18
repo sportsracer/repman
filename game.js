@@ -1,4 +1,5 @@
 const engine = require('./engine');
+const Position = require('./position');
 
 // game object
 
@@ -21,18 +22,20 @@ const gamePrototype = {
 
   getRandomPosition: function() {
     while (true) {
-      const x = 1 + Math.round(Math.random() * (engine.worldWidth - 3));
-      const y = 1 + Math.round(Math.random() * (engine.worldHeight - 3));
+      const pos = new Position(
+          1 + Math.round(Math.random() * (engine.worldWidth - 3)),
+          1 + Math.round(Math.random() * (engine.worldHeight - 3)),
+      );
       let occupied = false;
 
       this.walls.forEach(
           function(wall) {
-            occupied = occupied || wall.x() === x && wall.y() === y;
+            occupied = occupied || wall.collidesWith(pos);
           }, this,
       );
 
       if (!occupied) {
-        return {x: x, y: y};
+        return pos;
       }
     }
   },

@@ -4,15 +4,8 @@ describe('Wall', () => {
   it('can be constructed', () => {
     const wall = engine.makeWall(1, 2);
 
-    expect(wall.x()).toBe(1);
-    expect(wall.y()).toBe(2);
-  });
-
-  it('can be moved', () => {
-    const wall = engine.makeWall(1, 2);
-    wall.x(3);
-
-    expect(wall.x()).toBe(3);
+    expect(wall.pos().x).toBe(1);
+    expect(wall.pos().y).toBe(2);
   });
 });
 
@@ -33,10 +26,10 @@ describe('Tops & flops', () => {
     flop.randomize(); flop.move(delta, []);
 
     // top & flop have moved from their starting position, and are not in the same position since movement is random
-    expect(top.x()).not.toBe(x);
-    expect(top.x()).not.toBe(flop.x());
-    expect(top.y()).not.toBe(y);
-    expect(top.y()).not.toBe(flop.y());
+    expect(top.pos().x).not.toBe(x);
+    expect(top.pos().x).not.toBe(flop.pos().x);
+    expect(top.pos().y).not.toBe(y);
+    expect(top.pos().y).not.toBe(flop.pos().y);
   });
 });
 
@@ -70,8 +63,8 @@ describe('Player', () => {
     player.move(delta, []);
     player.move(delta, []);
 
-    expect(player.x()).toBeGreaterThan(x);
-    expect(player.y()).toBeLessThan(y);
+    expect(player.pos().x).toBeGreaterThan(x);
+    expect(player.pos().y).toBeLessThan(y);
   });
 
   it('collects tops for points', () => {

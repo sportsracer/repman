@@ -101,7 +101,7 @@ function drawGame(state) {
 	// draw walls
 	state.walls.forEach(
 		function(wall) {
-			context.drawImage(wallImg, wall.x * tileWidth, wall.y * tileWidth);
+			context.drawImage(wallImg, wall.pos.x * tileWidth, wall.pos.y * tileWidth);
 		}
 	);
 
@@ -119,7 +119,7 @@ function drawGame(state) {
 		function(player, playerIndex) {
 			var playerImg = playerImgs[playerIndex % playerImgs.length];
 			context.save();
-			context.translate(player.x * tileWidth + (tileWidth / 2), player.y * tileWidth + (tileWidth / 2));
+			context.translate(player.pos.x * tileWidth + (tileWidth / 2), player.pos.y * tileWidth + (tileWidth / 2));
 
 			context.fillStyle = "rgba(0, 0, 0, 0.5)";
 			context.font = player.points == maxPoints ? "bold 14px Ubuntu" : "12px Ubuntu";
@@ -136,7 +136,7 @@ function drawGame(state) {
 	state.topsFlops.forEach(
 		function(topFlop) {
 			var topFlopImg = topFlop.topFlop == "top" ? topImg : flopImg;
-			context.drawImage(topFlopImg, topFlop.x * tileWidth, topFlop.y * tileWidth);
+			context.drawImage(topFlopImg, topFlop.pos.x * tileWidth, topFlop.pos.y * tileWidth);
 		}
 	);
 
