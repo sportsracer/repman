@@ -148,9 +148,9 @@ function makeGame() {
   const walls = [];
   for (let i = 0; i < 8; i++) {
     walls.push(
-      engine.makeWall(7, i + 10),
-      engine.makeWall(15, i),
-      engine.makeWall(23, i + 10),
+        engine.makeWall(7, i + 10),
+        engine.makeWall(15, i),
+        engine.makeWall(23, i + 10),
     );
   }
 
