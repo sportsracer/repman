@@ -4,10 +4,10 @@
 	"author": "Steffen Wenz <steffenwenz@gmail.com>",
 	"description": "Reputation Management reloaded!",
 	"scripts": {
-		"lint_fix": "./node_modules/eslint/bin/eslint.js --fix *.js",
-		"lint": "./node_modules/eslint/bin/eslint.js *.js",
-		"test": "./node_modules/jest/bin/jest.js tests",
-		"start": "node main.js"
+		"lint_fix": "./node_modules/eslint/bin/eslint.js --fix src/**/*.js",
+		"lint": "./node_modules/eslint/bin/eslint.js src/**/*.js",
+		"test": "./node_modules/jest/bin/jest.js src/tests",
+		"start": "node src/main.js"
 	},
 	"repository": {
 		"type": "git",
