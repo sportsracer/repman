@@ -1,23 +1,37 @@
-const makeGame = require('../game').makeGame;
+const makeWall = require('../engine').makeWall;
+const {Game, makeGame} = require('../game');
+const Rectangle = require('../rectangle');
 
 describe('Game', () => {
-    it('can add a player', () => {
-      const game = makeGame();
-      const name = 'John Doe';
-      const player = game.addPlayer(name);
+  it('can find a position not blocked by a wall', () => {
+    const walls = [makeWall(0, 0)];
+    const game = new Game(Rectangle.fromOrigin(2, 1), walls, 0);
 
-      expect(player.name()).toBe(name);
-      expect(player.index()).toBe(0);
-    });
+    const pos = game.getRandomFreePosition();
 
-    it('can be serialized', () => {
-      const game = makeGame();
+    expect(pos.x).toBeGreaterThanOrEqual(1);
+    expect(pos.x).toBeLessThanOrEqual(2);
+    expect(pos.y).toBeGreaterThanOrEqual(0);
+    expect(pos.y).toBeLessThanOrEqual(1);
+  });
 
-      const state = game.getState();
+  it('can add a player', () => {
+    const game = makeGame();
+    const name = 'John Doe';
+    const player = game.addPlayer(name);
 
-      expect(state.players).toHaveLength(0);
-      expect(state.walls.length).toBeGreaterThan(0);
-      expect(state.topsFlops.length).toBeGreaterThan(0);
-      expect(typeof state.timer).toBe('number');
-    });
+    expect(player.name()).toBe(name);
+    expect(player.index()).toBe(0);
+  });
+
+  it('can be serialized', () => {
+    const game = makeGame();
+
+    const state = game.getState();
+
+    expect(state.players).toHaveLength(0);
+    expect(state.walls.length).toBeGreaterThan(0);
+    expect(state.topsFlops.length).toBeGreaterThan(0);
+    expect(typeof state.timer).toBe('number');
+  });
 });

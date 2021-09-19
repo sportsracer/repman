@@ -22,8 +22,8 @@ describe('Tops & flops', () => {
     const flop = engine.makeTopFlop(x, y, 'flop');
 
     const delta = 1;
-    top.randomize(); top.move(delta, []);
-    flop.randomize(); flop.move(delta, []);
+    top.randomize(); top.move(delta);
+    flop.randomize(); flop.move(delta);
 
     // top & flop have moved from their starting position, and are not in the same position since movement is random
     expect(top.pos().x).not.toBe(x);
@@ -60,8 +60,8 @@ describe('Player', () => {
     player.input(true, true, false, false);
     // move twice so that turn speed has an effect
     const delta = 0.01;
-    player.move(delta, []);
-    player.move(delta, []);
+    player.move(delta);
+    player.move(delta);
 
     expect(player.pos().x).toBeGreaterThan(x);
     expect(player.pos().y).toBeLessThan(y);

@@ -12,6 +12,14 @@ class Position {
   }
 
   /**
+   * Position (0, 0)
+   * @return {Position}
+   */
+  static origin() {
+    return new Position(0, 0);
+  }
+
+  /**
    * Return a new position from adding `other` to this one.
    * @param {Position} other
    * @return {Position}

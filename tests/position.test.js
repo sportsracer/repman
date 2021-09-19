@@ -32,7 +32,7 @@ describe('Position', () => {
   });
 
   it('can calculate its distance to another position', () => {
-    const origin = new Position(0, 0);
+    const origin = Position.origin();
     const pos11 = new Position(1, 1);
 
     const distance = origin.distanceTo(pos11);

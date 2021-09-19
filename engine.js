@@ -5,8 +5,6 @@ const Position = require('./position');
 const playerMoveSpeed = 4;
 const playerTurnSpeed = Math.PI;
 const topFlopCollectDistance = 1;
-const worldWidth = 32;
-const worldHeight = 18;
 
 // state
 
@@ -72,18 +70,18 @@ const TMovable = Trait.compose(
     hasProperty('turnSpeed', 0),
     Trait({
       /**
-       * Move and rotate this object, unless it would collide with a wall in the new position.
+       * Move and rotate this object, unless it would leave the game area or collide with a wall in the new position.
        * @param {Number} delta
+       * @param {Rectangle} gameBounds
        * @param {Object[]} walls
        */
-      move(delta, walls) {
+      move(delta, gameBounds=null, walls=[]) {
         const moveDirection = Position.fromAngle(this.angle());
         const moveDistance = this.moveSpeed() * delta;
         const newPos = this.pos().add(moveDirection.scale(moveDistance));
 
         // check for collisions
-        const outOfGame = newPos.x < 0 || newPos.y < 0 || newPos.x > (worldWidth - 1) || newPos.y > (worldHeight - 1);
-
+        const outOfGame = gameBounds !== null && !gameBounds.contains(newPos);
         this.colliding(
             walls.reduce(
                 (colliding, wall) => colliding || wall.collidesWith(newPos),
@@ -227,5 +225,3 @@ function makePlayer(x, y, index, name) {
 exports.makePlayer = makePlayer;
 exports.makeWall = makeWall;
 exports.makeTopFlop = makeTopFlop;
-exports.worldWidth = worldWidth;
-exports.worldHeight = worldHeight;

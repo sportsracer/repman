@@ -59,7 +59,7 @@ server.on('connection',
                   sendError(ws, 'Not in game');
                   return;
                 }
-                ws.game.setInput(ws.player.index(), message);
+                ws.player.input(message.w, message.a, message.s, message.d);
                 break;
 
               default:
