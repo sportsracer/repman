@@ -49,7 +49,7 @@ class Game {
    */
   addPlayer(name) {
     const pos = this.getRandomFreePosition();
-    const player = engine.makePlayer(pos.x, pos.y, this.players.length, name);
+    const player = engine.makePlayer(pos.x, pos.y, name);
     this.players.push(player);
     return player;
   }

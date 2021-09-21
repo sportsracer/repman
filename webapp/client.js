@@ -52,7 +52,7 @@ function joinGame(host, port, name) {
 		switch (message.msg) {
 
 		case "joined":
-			log("Joined as player " + message.playerIndex);
+			log("Successfully joined");
 			setInterval(sendInput, pollFreq);
 			canvas.style.display = "block";
 			setupForm.style.display = "none";
@@ -124,7 +124,7 @@ function drawGame(state) {
 			context.fillStyle = "rgba(0, 0, 0, 0.5)";
 			context.font = player.points == maxPoints ? "bold 14px Ubuntu" : "12px Ubuntu";
 			context.textAlign = "center";
-			context.fillText(player.name + ": " + player.points, 0, -32);
+			context.fillText(player.name + ": " + (player.points || "0"), 0, -32);
 
 			context.rotate(player.angle);
 			context.drawImage(playerImg, -tileWidth / 2, -tileWidth / 2);
@@ -143,7 +143,7 @@ function drawGame(state) {
 	// show scores
 	var scores = state.players.map(
 		function(player) {
-			return player.name + " (" + player.index + "): " + player.points;
+			return player.name + ": " + (player.points || "0");
 		}
 	).join(", ");
 	status(scores + " (" + Math.round(state.timer) + "s)");

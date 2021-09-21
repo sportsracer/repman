@@ -21,7 +21,6 @@ describe('Game', () => {
     const player = game.addPlayer(name);
 
     expect(player.name()).toBe(name);
-    expect(player.index()).toBe(0);
   });
 
   it('can be serialized', () => {

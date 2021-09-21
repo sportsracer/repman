@@ -157,7 +157,6 @@ const TTopFlop = Trait.compose(
 const TPlayer = Trait.compose(
     TMovable,
     TControllableWithWasd,
-    hasProperty('index'),
     hasProperty('name'),
     hasProperty('points', 0),
     Trait({
@@ -174,7 +173,7 @@ const TPlayer = Trait.compose(
             (topFlop) => {
               const inc = topFlop.topFlop() === 'top' ? 1 : -1;
               this.points(this.points() + inc);
-              console.log('Player %d now has %d points', this.index(), this.points());
+              console.log('%s now has %d points', this.name(), this.points());
               return topFlop;
             },
             this,
@@ -213,13 +212,12 @@ function makeTopFlop(x, y, topFlop) {
  * Make a player.
  * @param {Number} x
  * @param {Number} y
- * @param {Number} index
  * @param {String} name
  * @return {Object}
  */
-function makePlayer(x, y, index, name) {
+function makePlayer(x, y, name) {
   const pos = new Position(x, y);
-  return Trait.create(Object.prototype, Trait.compose(makeState({pos, index, name}), TPlayer));
+  return Trait.create(Object.prototype, Trait.compose(makeState({pos, name}), TPlayer));
 }
 
 exports.makePlayer = makePlayer;

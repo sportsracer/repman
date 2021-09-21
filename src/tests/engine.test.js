@@ -36,20 +36,18 @@ describe('Tops & flops', () => {
 describe('Player', () => {
   const x = 6;
   const y = 4;
-  const index = 0;
   const name = 'John Doe';
 
   /**
    * @return {object} Player fixture for tests
    */
   function makePlayer() {
-    return engine.makePlayer(x, y, index, name);
+    return engine.makePlayer(x, y, name);
   }
 
   it('can be constructed', () => {
     const player = makePlayer();
 
-    expect(player.index()).toBe(index);
     expect(player.name()).toBe(name);
     expect(player.points()).toBe(0);
   });
