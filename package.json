@@ -4,8 +4,8 @@
 	"author": "Steffen Wenz <steffenwenz@gmail.com>",
 	"description": "Reputation Management reloaded!",
 	"scripts": {
-		"lint_fix": "./node_modules/eslint/bin/eslint.js --fix src/**/*.js",
-		"lint": "./node_modules/eslint/bin/eslint.js src/**/*.js",
+		"lint_fix": "./node_modules/eslint/bin/eslint.js --fix src/**/*.js public/*.js",
+		"lint": "./node_modules/eslint/bin/eslint.js src/**/*.js public/*.js",
 		"test": "./node_modules/jest/bin/jest.js src/tests",
 		"start": "node src/main.js"
 	},
@@ -14,6 +14,7 @@
 		"url": "https://github.com/sportsracer/repman.git"
 	},
 	"dependencies": {
+		"express": "^4.17.1",
 		"traits.js": "^1.1.5",
 		"ws": "^8.2.2"
 	},

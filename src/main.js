@@ -1,11 +1,28 @@
+const express = require('express');
+const http = require('http');
+const ws = require('ws');
+
 const makeGame = require('./game').makeGame;
 const Server = require('./server').Server;
 
-const host = '0.0.0.0';
-const port = 8888;
+// Create Repman game
 const game = makeGame();
 
-const server = Server.fromHostPort(host, port, game);
+// Set up HTTP & websocket servers
+const app = express();
+const httpServer = http.createServer(app);
+const wsServer = new ws.Server({server: httpServer});
+
+// Start Repman server
+const server = new Server(wsServer, game);
 server.start();
 
-console.info('Listening on port %d', port);
+// Set up file serving
+app.use(express.static('public'));
+
+// Listen for incoming connections!
+const port = process.env.PORT || 8888;
+httpServer.listen(port, () => {
+  console.info('Server started on %s', port);
+  console.info('To join the game locally, visit http://localhost:%d/index.html', port);
+});

@@ -126,17 +126,6 @@ class Server {
   }
 
   /**
-   * Create a new Repman server by starting a websocket server on the given host and port.
-   * @param {String} host 
-   * @param {Number} port 
-   * @param {Game} game 
-   */
-  static fromHostPort(host, port, game) {
-    const wss = new WebSocketServer({host, port});
-    return new Server(wss, game);
-  }
-
-  /**
    * Start reacting to incoming websocket connections, and advancing the game state.
    */
   start() {
