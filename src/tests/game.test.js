@@ -1,11 +1,10 @@
 const makeWall = require('../engine').makeWall;
 const {Game, makeGame} = require('../game');
-const Rectangle = require('../rectangle');
 
 describe('Game', () => {
   it('can find a position not blocked by a wall', () => {
     const walls = [makeWall(0, 0)];
-    const game = new Game(Rectangle.fromOrigin(2, 1), walls, 0);
+    const game = new Game(2, 1, walls, 0);
 
     const pos = game.getRandomFreePosition();
 

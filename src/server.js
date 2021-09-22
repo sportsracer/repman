@@ -135,7 +135,7 @@ class Server {
   }
 
   /**
-   * Stop reacting to incoming connections, and stop advancing the game state. Doesn't close any remaining websockets.
+   * Stop reacting to incoming connections, close all open websockets, and stop advancing the game state.
    */
   stop() {
     this.wss.clients.forEach((client) => {
@@ -143,7 +143,7 @@ class Server {
         client.close();
       }
     });
-    this.wss.removeAllListeners('connection', this.connect);
+    this.wss.removeAllListeners('connection');
     clearInterval(this.intervalId);
     this.intervalId = null;
   }
@@ -160,8 +160,9 @@ class Server {
     this.clients.set(clientId, initialState);
 
     ws.on('message', (messageRaw) => {
-      let message;
       const clientState = this.clients.get(clientId);
+      
+      let message;
       try {
         message = JSON.parse(messageRaw);
       } catch (err) {

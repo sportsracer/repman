@@ -9,12 +9,14 @@ class Game {
   static topFlopRespawnTime = 2000;
 
   /**
-   * @param {Rectangle} bounds
+   * @param {Number} width
+   * @param {Number} height
    * @param {Object[]} walls
    * @param {Number} numTopsFlops
    */
-  constructor(bounds, walls, numTopsFlops) {
-    this.bounds = bounds;
+  constructor(width, height, walls, numTopsFlops) {
+    this.width = width;
+    this.height = height;
     this.walls = walls;
 
     this.topsFlops = [];
@@ -23,23 +25,10 @@ class Game {
       this.spawnTopFlop(topFlop);
     });
 
+    this.bounds = Rectangle.fromOrigin(width, height);
     this.players = [];
     this.lastTick = null;
     this.timer = 0;
-  }
-
-  /**
-   * @return {Number}
-   */
-  get width() {
-    return this.bounds.bottomRight.x - this.bounds.topLeft.x;
-  }
-
-  /**
-   * @return {Number}
-   */
-  get height() {
-    return this.bounds.bottomRight.y - this.bounds.topLeft.y;
   }
 
   /**
@@ -80,8 +69,8 @@ class Game {
   getRandomFreePosition() {
     while (true) {
       const pos = new Position(
-          Math.round(Math.random() * (this.width - 1)),
-          Math.round(Math.random() * (this.height - 1)),
+          Math.round(Math.random() * this.width),
+          Math.round(Math.random() * this.height),
       );
 
       const occupied = this.walls.reduce((occupied, wall) => occupied || wall.collidesWith(pos), false);
@@ -130,6 +119,8 @@ class Game {
   getState() {
     const getState = (el) => el.getState();
     return {
+      width: this.width,
+      height: this.height,
       players: this.players.map(getState),
       walls: this.walls.map(getState),
       topsFlops: this.topsFlops.map(getState),
@@ -143,7 +134,8 @@ class Game {
  * @return {Game}
  */
 function makeGame() {
-  const bounds = Rectangle.fromOrigin(32, 18);
+  const width = 32;
+  const height = 18;
 
   const walls = [];
   for (let i = 0; i < 8; i++) {
@@ -154,7 +146,7 @@ function makeGame() {
     );
   }
 
-  const game = new Game(bounds, walls, numTopsFlops=16);
+  const game = new Game(width, height, walls, numTopsFlops=16);
   return game;
 }
 

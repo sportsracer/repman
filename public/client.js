@@ -116,7 +116,9 @@ const tileWidth = 32;
  * @param {Object} state Game state, as it was sent to us from the server.
  */
 function drawGame(state) {
-  const canvas = document.getElementById('canvas');
+  canvas.width = state.width * tileWidth;
+  canvas.height = state.height * tileWidth;
+
   const context = canvas.getContext('2d');
 
   // fill background
@@ -150,7 +152,7 @@ function drawGame(state) {
       function(player, playerIndex) {
         const playerImg = playerImgs[playerIndex % playerImgs.length];
         context.save();
-        context.translate(player.pos.x * tileWidth + (tileWidth / 2), player.pos.y * tileWidth + (tileWidth / 2));
+        context.translate(player.pos.x * tileWidth, player.pos.y * tileWidth);
 
         context.fillStyle = 'rgba(0, 0, 0, 0.5)';
         context.font = player.points == maxPoints ? 'bold 14px Ubuntu' : '12px Ubuntu';
@@ -171,7 +173,7 @@ function drawGame(state) {
        */
       function(topFlop) {
         const topFlopImg = topFlop.topFlop == 'top' ? topImg : flopImg;
-        context.drawImage(topFlopImg, topFlop.pos.x * tileWidth, topFlop.pos.y * tileWidth);
+        context.drawImage(topFlopImg, (topFlop.pos.x - 0.5) * tileWidth, (topFlop.pos.y - 0.5) * tileWidth);
       },
   );
 

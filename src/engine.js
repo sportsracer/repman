@@ -1,9 +1,11 @@
 const Trait = require('traits.js');
 
 const Position = require('./position');
+const Rectangle = require('./rectangle');
 
 const playerMoveSpeed = 4;
 const playerTurnSpeed = Math.PI;
+const wallDimensions = new Position(1, 1);
 const topFlopCollectDistance = 1;
 
 // state
@@ -126,11 +128,13 @@ const TWall = Trait.compose(
     Trait({
     /**
      * Determine whether a point collides with this wall.
-     * @param {Position} pos
+     * @param {Position} otherPos
      * @return {Boolean}
      */
-      collidesWith(pos) {
-        return Math.round(pos.x) === Math.round(this.pos().x) && Math.round(pos.y) === Math.round(this.pos().y);
+      collidesWith(otherPos) {
+        const pos = this.pos();
+        const bounds = new Rectangle(pos, pos.add(wallDimensions));
+        return bounds.contains(otherPos);
       },
     }),
 );
