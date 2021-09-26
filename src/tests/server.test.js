@@ -1,3 +1,5 @@
+const {OPEN} = require('ws');
+
 const makeGame = require('../game').makeGame;
 const Server = require('../server').Server;
 
@@ -27,6 +29,10 @@ class MockWebSocketServer extends MockEventEmitter {
 }
 
 class MockWebSocket extends MockEventEmitter {
+  get readyState() {
+    return OPEN;
+  }
+
   send() {}
 }
 

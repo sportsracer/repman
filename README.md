@@ -35,8 +35,11 @@ npm test
 
 ### Overview of files
 
+Server:
 * [`Position`](src/position.js) and [`Rectangle`](src/rectangle.js) are geometric primitives
 * [`engine.js`](src/engine.js) contains definitions of all game objects by composing behavior using [traits.js](https://www.npmjs.com/package/traits.js)
 * [`Game`](src/game.js) defines the business logic of a game containing multiple players
 * [`Server`](src/server.js) turns Repman into a multiplayer game by sending & receiving data over websockets
 * … and [`main.js`](src/main.js) is the app entry point
+
+The game client is implemented in [`public/client.js`](public/client.js).

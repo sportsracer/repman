@@ -4,8 +4,8 @@
 	"author": "Steffen Wenz <steffenwenz@gmail.com>",
 	"description": "Reputation Management reloaded!",
 	"scripts": {
-		"lint_fix": "./node_modules/eslint/bin/eslint.js --fix src/**/*.js public/*.js",
-		"lint": "./node_modules/eslint/bin/eslint.js src/**/*.js public/*.js",
+		"lint_fix": "./node_modules/eslint/bin/eslint.js --fix \"src/**/*.js\" \"public/*.js\"",
+		"lint": "./node_modules/eslint/bin/eslint.js \"src/**/*.js\" \"public/*.js\"",
 		"test": "./node_modules/jest/bin/jest.js src/tests",
 		"start": "node src/main.js"
 	},
