@@ -1,11 +1,11 @@
-const engine = require('./engine');
-const Position = require('./position');
-const Rectangle = require('./rectangle');
+import * as engine from './engine';
+import Position from './position';
+import Rectangle from './rectangle';
 
 /**
  * Main game object.
  */
-class Game {
+export class Game {
   static topFlopRespawnTime = 2000;
 
   /**
@@ -133,7 +133,7 @@ class Game {
  * Make a game with three walls crossing the playing field.
  * @return {Game}
  */
-function makeGame() {
+export function makeGame() {
   const width = 32;
   const height = 18;
 
@@ -149,6 +149,3 @@ function makeGame() {
   const game = new Game(width, height, walls, 16);
   return game;
 }
-
-exports.Game = Game;
-exports.makeGame = makeGame;

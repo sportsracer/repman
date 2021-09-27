@@ -1,4 +1,4 @@
-const {WebSocket} = require('ws');
+import { WebSocket } from 'ws';
 
 const gameTickInterval = 50;
 
@@ -136,7 +136,7 @@ class Client {
 /**
  * Repman game server.
  */
-class Server {
+export default class Server {
   #wss;
   #game;
   #clients;
@@ -199,5 +199,3 @@ class Server {
     }
   }
 }
-
-exports.Server = Server;

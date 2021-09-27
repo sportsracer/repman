@@ -1,4 +1,4 @@
-const engine = require('../engine');
+import * as engine from '../engine';
 
 describe('Wall', () => {
   it('can be constructed', () => {

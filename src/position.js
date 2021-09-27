@@ -1,7 +1,7 @@
 /**
  * Two-dimensional position in game.
  */
-class Position {
+export default class Position {
   /**
    * @param {Number} x
    * @param {Number} y
@@ -66,5 +66,3 @@ class Position {
     return Math.sqrt(x * x + y * y);
   }
 }
-
-module.exports = Position;

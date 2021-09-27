@@ -1,9 +1,9 @@
-const Position = require('./position');
+import Position from './position';
 
 /**
  * Axis-aligned rectangle defined by its top-left and bottom-right corners.
  */
-class Rectangle {
+export default class Rectangle {
   /**
    * @param {Position} topLeft
    * @param {Position} bottomRight
@@ -33,5 +33,3 @@ class Rectangle {
     return new Rectangle(Position.origin(), new Position(bottomRightX, bottomRightY));
   }
 }
-
-module.exports = Rectangle;

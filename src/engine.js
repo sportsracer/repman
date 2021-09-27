@@ -1,7 +1,7 @@
 const Trait = require('traits.js');
 
-const Position = require('./position');
-const Rectangle = require('./rectangle');
+import Position from './position';
+import Rectangle from './rectangle';
 
 const playerMoveSpeed = 4;
 const playerTurnSpeed = Math.PI;
@@ -192,7 +192,7 @@ const TPlayer = Trait.compose(
  * @param {Number} y
  * @return {Object}
  */
-function makeWall(x, y) {
+export function makeWall(x, y) {
   const pos = new Position(x, y);
   return Trait.create(Object.prototype, Trait.compose(makeState({pos}), TWall));
 }
@@ -204,7 +204,7 @@ function makeWall(x, y) {
  * @param {String} topFlop Either 'top' or 'flop'
  * @return {Object}
  */
-function makeTopFlop(x, y, topFlop) {
+export function makeTopFlop(x, y, topFlop) {
   const pos = new Position(x, y);
   const angle = Math.random() * Math.PI * 2;
   return Trait.create(Object.prototype, Trait.compose(makeState({pos, angle, topFlop}), TTopFlop));
@@ -217,11 +217,7 @@ function makeTopFlop(x, y, topFlop) {
  * @param {String} name
  * @return {Object}
  */
-function makePlayer(x, y, name) {
+export function makePlayer(x, y, name) {
   const pos = new Position(x, y);
   return Trait.create(Object.prototype, Trait.compose(makeState({pos, name}), TPlayer));
 }
-
-exports.makePlayer = makePlayer;
-exports.makeWall = makeWall;
-exports.makeTopFlop = makeTopFlop;
