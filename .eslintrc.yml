@@ -4,7 +4,7 @@ env:
   node: true
 extends:
   - google
-parser: "@babel/eslint-parser"
+parser: "@typescript-eslint/parser"
 parserOptions:
   ecmaVersion: 12
   sourceType: module
@@ -16,7 +16,7 @@ rules:
     - code: 120
 
   valid-jsdoc:
-    - warn
+    - off
 
   new-cap:
     - error

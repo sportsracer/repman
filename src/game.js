@@ -146,7 +146,7 @@ function makeGame() {
     );
   }
 
-  const game = new Game(width, height, walls, numTopsFlops=16);
+  const game = new Game(width, height, walls, 16);
   return game;
 }
 
