@@ -37,8 +37,8 @@ class Game {
    * @return {Object} Player object
    */
   addPlayer(name) {
-    const pos = this.getRandomFreePosition();
-    const player = engine.makePlayer(pos.x, pos.y, name);
+    const {x, y} = this.getRandomFreePosition();
+    const player = engine.makePlayer(x, y, name);
     this.players.push(player);
     return player;
   }

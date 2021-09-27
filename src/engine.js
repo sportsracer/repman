@@ -172,7 +172,6 @@ const TPlayer = Trait.compose(
       collect(topsFlops) {
         return topsFlops.filter(
             (topFlop) => this.pos().distanceTo(topFlop.pos()) <= topFlopCollectDistance,
-            this,
         ).map(
             (topFlop) => {
               const inc = topFlop.topFlop() === 'top' ? 1 : -1;
@@ -180,7 +179,6 @@ const TPlayer = Trait.compose(
               console.log('%s now has %d points', this.name(), this.points());
               return topFlop;
             },
-            this,
         );
       },
     }),

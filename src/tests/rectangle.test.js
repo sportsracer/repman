@@ -2,13 +2,19 @@ const Position = require('../position');
 const Rectangle = require('../rectangle');
 
 describe('Rectangle', () => {
-  it('can check whether it contains a point', () => {
-    const rect = new Rectangle(1, 1, 4, 2);
+  const rect = new Rectangle(new Position(1, 1), new Position(4, 2));
 
-    expect(rect.contains(new Position(1, 1)));
-    expect(rect.contains(new Position(2, 2)));
-
-    expect(rect.contains(new Position(0, 0))).not;
-    expect(rect.contains(new Position(4, 3))).not;
-  });
+  test.each`
+  x      | y      | contained
+  ${1}   | ${1}   | ${true}
+  ${2.5} | ${1.5} | ${true}
+  ${4}   | ${2}   | ${true}
+  ${0}   | ${1.5} | ${false}
+  ${-1}  | ${-1}  | ${false}
+  `(
+      'contains ($x, $y)? => $contained',
+      ({x, y, contained}) => {
+        expect(rect.contains(new Position(x, y))).toBe(contained);
+      },
+  );
 });
