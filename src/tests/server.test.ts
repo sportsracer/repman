@@ -1,6 +1,8 @@
-import { OPEN } from 'ws';
+// @ts-nocheck
 
-import { makeGame } from '../game';
+import {OPEN} from 'ws';
+
+import {makeGame} from '../game';
 import Server from '../server';
 
 class MockEventEmitter {

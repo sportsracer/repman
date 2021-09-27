@@ -1,27 +1,34 @@
-import { WebSocket } from 'ws';
+import {WebSocket, WebSocketServer} from 'ws';
+
+import {IPlayer} from './engine';
+import {Game} from './game';
 
 const gameTickInterval = 50;
+
+// messages we can receive from the client
+
+interface JoinMessage {
+  msg: 'join',
+  name: string
+};
+
+interface InputMessage {
+  msg: 'input',
+  w: boolean, a: boolean, s: boolean, d: boolean
+};
 
 /**
  * Repman client. Handles receiving & sending messages via websockets, and translating them to game actions.
  */
 class Client {
-  #ws;
-  #game;
-  #doneCallback;
-  #player;
+  private player?: IPlayer;
 
   /**
-   * @param {WebSocket} ws Websocket already in connected state
-   * @param {Game} game Repman game instance
-   * @param {Function} doneCallback Called when the player has left or disconnected
+   * @param ws Websocket already in connected state
+   * @param game Repman game instance
+   * @param doneCallback Called when the player has left or disconnected
    */
-  constructor(ws, game, doneCallback) {
-    this.#ws = ws;
-    this.#game = game;
-    this.#doneCallback = doneCallback;
-    this.#player = null; // This is set to the player instance when this client joins the game
-  }
+  constructor(private ws: WebSocket, private game: Game, private doneCallback: Function) {}
 
   /**
    * Start listening to incoming websocket messages.
@@ -30,13 +37,13 @@ class Client {
     const receiveMessage = this.receiveMessages();
     receiveMessage.next(); // Advance generator to the first expected message
 
-    this.#ws.on('message', (messageStr) => {
+    this.ws.on('message', (messageStr: string) => {
       const {done} = receiveMessage.next(messageStr);
       done && this.stop();
     });
 
-    this.#ws.on('close', () => {
-      if (this.#player !== null) {
+    this.ws.on('close', () => {
+      if (this.player !== null) {
         receiveMessage.next('{"msg": "leave"}');
       }
       this.stop();
@@ -47,27 +54,25 @@ class Client {
    * Stop listening to incoming messages and invoke `doneCallback`.
    */
   stop() {
-    this.#ws.removeAllListeners('message');
-    this.#ws.removeAllListeners('close');
-    this.#doneCallback();
+    this.ws.removeAllListeners('message');
+    this.ws.removeAllListeners('close');
+    this.doneCallback();
   }
 
   /**
    * Send a message back to the client.
-   * @param {Object} message
    */
-  sendMessage(message) {
-    if (this.#ws.readyState === WebSocket.OPEN) {
+  sendMessage(message: any) {
+    if (this.ws.readyState === WebSocket.OPEN) {
       const messageStr = JSON.stringify(message);
-      this.#ws.send(messageStr);
+      this.ws.send(messageStr);
     }
   }
 
   /**
    * Send an error message back to the client.
-   * @param {String} description
    */
-  sendError(description) {
+  sendError(description: string) {
     console.warn(description);
     this.sendMessage({
       msg: 'error',
@@ -77,10 +82,10 @@ class Client {
 
   /**
    * Handle a message received from the client.
-   * @param {String} messageStr Raw message received over the websocket
-   * @param {Object} callbacks Valid callbacks, keyed by the `msg` property
+   * @param messageStr Raw message received over the websocket
+   * @param callbacks Valid callbacks, keyed by the `msg` property
    */
-  #handle(messageStr, callbacks) {
+  private handle(messageStr: string, callbacks: {[msg: string]: Function}) {
     let message;
     try {
       message = JSON.parse(messageStr);
@@ -106,25 +111,25 @@ class Client {
    * production code :)
    */
   * receiveMessages() {
-    this.#handle(yield, {
-      join: (message) => {
-        this.#player = this.#game.addPlayer(message.name);
+    this.handle(yield, {
+      join: (message: JoinMessage) => {
+        this.player = this.game.addPlayer(message.name);
         this.sendMessage({msg: 'joined'});
-        console.log('%s joined the game', this.#player.name());
+        console.log('%s joined the game', this.player.name());
       },
     });
 
     let inGame = true;
     while (inGame) {
-      this.#handle(yield, {
-        input: (message) => {
-          this.#player.input(message.w, message.a, message.s, message.d);
+      this.handle(yield, {
+        input: (message: InputMessage) => {
+          this.player && this.player.input(message.w, message.a, message.s, message.d);
         },
         leave: () => {
-          if (this.#player !== null) {
-            console.log('Player %s is leaving', this.#player.name());
-            this.#game.removePlayer(this.#player);
-            this.#player = null;
+          if (this.player !== undefined) {
+            console.log('Player %s is leaving', this.player.name());
+            this.game.removePlayer(this.player);
+            this.player = undefined;
           }
           inGame = false;
         },
@@ -137,64 +142,60 @@ class Client {
  * Repman game server.
  */
 export default class Server {
-  #wss;
-  #game;
-  #clients;
-  #intervalId;
+  private clients: Set<Client> = new Set();
+  private intervalId?: NodeJS.Timeout;
 
   /**
-   * @param {WebSocketServer} wss A websocket server which is already listening for incoming connections.
-   * @param {Game} game Repman game for players to join.
+   * @param wss A websocket server which is already started
+   * @param game Repman game for players to join
    */
-  constructor(wss, game) {
-    this.#wss = wss;
-    this.#game = game;
-  }
+  constructor(private wss: WebSocketServer, private game: Game) {}
 
   /**
    * Start reacting to incoming websocket connections, and advancing the game state.
    */
   start() {
-    this.#clients = new Set();
-    this.#wss.on('connection', (ws) => {
+    this.wss.on('connection', (ws) => {
       console.info('New client connecting …');
 
-      const client = new Client(ws, this.#game, () => {
-        this.#clients.delete(client);
+      const client = new Client(ws, this.game, () => {
+        this.clients.delete(client);
       });
-      this.#clients.add(client);
+      this.clients.add(client);
 
       client.start();
     });
-    this.#intervalId = setInterval(() => this.tick(), gameTickInterval);
+    this.intervalId = setInterval(() => this.tick(), gameTickInterval);
   }
 
   /**
    * Stop reacting to incoming connections, close all open websockets, and stop advancing the game state.
    */
   stop() {
-    this.#wss.clients.forEach((client) => {
+    this.wss.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
         client.close();
       }
     });
-    this.#wss.removeAllListeners('connection');
-    clearInterval(this.#intervalId);
-    this.#intervalId = null;
+    this.wss.removeAllListeners('connection');
+    if (this.intervalId !== undefined) {
+      clearInterval(this.intervalId);
+      this.intervalId = undefined;
+    }
   }
 
   /**
    * Advance the game state, and broadcast to all clients.
    */
   tick() {
-    this.#game.tick();
+    this.game.tick();
 
     const message = {
       msg: 'state',
-      ...this.#game.getState(),
+      ...this.game.getState(),
     };
 
-    for (const client of this.#clients) {
+    for (const client of this.clients) {
       client.sendMessage(message);
     }
   }

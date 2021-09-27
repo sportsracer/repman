@@ -10,7 +10,7 @@ export default class Position {
   /**
    * Create position (0, 0).
    */
-  static origin() {
+  static origin(): Position {
     return new Position(0, 0);
   }
 

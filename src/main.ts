@@ -2,7 +2,7 @@ import express from 'express';
 import http from 'http';
 import ws from 'ws';
 
-import { makeGame } from './game';
+import {makeGame} from './game';
 import Server from './server';
 
 // Create Repman game
