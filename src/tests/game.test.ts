@@ -1,5 +1,5 @@
-import { makeWall } from '../engine';
-import { Game, makeGame } from '../game';
+import {makeWall} from '../engine';
+import {Game, makeGame} from '../game';
 
 describe('Game', () => {
   it('can find a position not blocked by a wall', () => {

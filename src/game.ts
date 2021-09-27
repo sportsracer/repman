@@ -1,4 +1,4 @@
-import * as engine from './engine';
+import {IPlayer, ITopFlop, IWall, makePlayer, makeTopFlop, makeWall, TopFlopType} from './engine';
 import Position from './position';
 import Rectangle from './rectangle';
 
@@ -8,65 +8,58 @@ import Rectangle from './rectangle';
 export class Game {
   static topFlopRespawnTime = 2000;
 
-  /**
-   * @param {Number} width
-   * @param {Number} height
-   * @param {Object[]} walls
-   * @param {Number} numTopsFlops
-   */
-  constructor(width, height, walls, numTopsFlops) {
-    this.width = width;
-    this.height = height;
-    this.walls = walls;
+  private bounds: Rectangle;
+  private topsFlops: ITopFlop[] = [];
+  private players: IPlayer[] = [];
+  private timer: number = 0;
+  private lastTick?: number;
 
-    this.topsFlops = [];
+  /**
+   * @param width Width of the game world
+   * @param height Height of the game world
+   * @param walls Walls which are to be placed in the game
+   * @param numTopsFlops Total number of tops and flops to spawn
+   */
+  constructor(private width: number, private height: number, private walls: IWall[], numTopsFlops: number) {
     [...Array(numTopsFlops)].forEach((_, i) => {
-      const topFlop = i % 2 == 0 ? 'top' : 'flop';
+      const topFlop = i % 2 == 0 ? TopFlopType.TOP : TopFlopType.FLOP;
       this.spawnTopFlop(topFlop);
     });
 
     this.bounds = Rectangle.fromOrigin(width, height);
-    this.players = [];
-    this.lastTick = null;
-    this.timer = 0;
   }
 
   /**
    * Add a player to the game.
-   * @param {String} name
-   * @return {Object} Player object
    */
-  addPlayer(name) {
+  addPlayer(name: string): IPlayer {
     const {x, y} = this.getRandomFreePosition();
-    const player = engine.makePlayer(x, y, name);
+    const player = makePlayer(x, y, name);
     this.players.push(player);
     return player;
   }
 
   /**
    * Remove a player from the game. Pass the object you were returned from `addPlayer`.
-   * @param {Object} player
    */
-  removePlayer(player) {
+  removePlayer(player: IPlayer) {
     const index = this.players.indexOf(player);
     this.players.splice(index, 1);
   }
 
   /**
    * Create a top/flop object in a free position.
-   * @param {String} type Either 'top' or 'flop'
    */
-  spawnTopFlop(type) {
+  spawnTopFlop(type: TopFlopType) {
     const pos = this.getRandomFreePosition();
-    const topFlop = engine.makeTopFlop(pos.x, pos.y, type);
+    const topFlop = makeTopFlop(pos.x, pos.y, type);
     this.topsFlops.push(topFlop);
   }
 
   /**
    * Return a random position not blocked by a wall.
-   * @return {Position}
    */
-  getRandomFreePosition() {
+  getRandomFreePosition(): Position {
     while (true) {
       const pos = new Position(
           Math.round(Math.random() * this.width),
@@ -114,10 +107,9 @@ export class Game {
 
   /**
    * Return a representation of the game which can be sent to clients.
-   * @return {Object}
    */
-  getState() {
-    const getState = (el) => el.getState();
+  getState(): {[key: string]: any} {
+    const getState = (el: any) => el.getState();
     return {
       width: this.width,
       height: this.height,
@@ -131,18 +123,17 @@ export class Game {
 
 /**
  * Make a game with three walls crossing the playing field.
- * @return {Game}
  */
-export function makeGame() {
+export function makeGame(): Game {
   const width = 32;
   const height = 18;
 
   const walls = [];
   for (let i = 0; i < 8; i++) {
     walls.push(
-        engine.makeWall(7, i + 10),
-        engine.makeWall(15, i),
-        engine.makeWall(23, i + 10),
+        makeWall(7, i + 10),
+        makeWall(15, i),
+        makeWall(23, i + 10),
     );
   }
 

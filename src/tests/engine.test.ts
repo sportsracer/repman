@@ -11,15 +11,15 @@ describe('Wall', () => {
 
 describe('Tops & flops', () => {
   it('can be constructed', () => {
-    const top = engine.makeTopFlop(1, 2, 'top');
+    const top = engine.makeTopFlop(1, 2, engine.TopFlopType.TOP);
 
     expect(top.topFlop()).toBe('top');
   });
 
   test('move randomly', () => {
     const x = 6; const y = 4;
-    const top = engine.makeTopFlop(x, y, 'top');
-    const flop = engine.makeTopFlop(x, y, 'flop');
+    const top = engine.makeTopFlop(x, y, engine.TopFlopType.TOP);
+    const flop = engine.makeTopFlop(x, y, engine.TopFlopType.FLOP);
 
     const delta = 1;
     top.randomize(); top.move(delta);
@@ -68,9 +68,9 @@ describe('Player', () => {
   it('collects tops for points', () => {
     const player = makePlayer();
     const topsFlops = [
-      engine.makeTopFlop(x, y, 'top'),
-      engine.makeTopFlop(x + 0.5, y, 'top'),
-      engine.makeTopFlop(x + 1, y + 1, 'flop'), // too far away to collect
+      engine.makeTopFlop(x, y, engine.TopFlopType.TOP),
+      engine.makeTopFlop(x + 0.5, y, engine.TopFlopType.TOP),
+      engine.makeTopFlop(x + 1, y + 1, engine.TopFlopType.FLOP), // too far away to collect
     ];
 
     player.collect(topsFlops);
