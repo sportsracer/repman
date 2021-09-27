@@ -1,7 +1,9 @@
-const {OPEN} = require('ws');
+// @ts-nocheck
 
-const makeGame = require('../game').makeGame;
-const Server = require('../server').Server;
+import {OPEN} from 'ws';
+
+import {makeGame} from '../game';
+import Server from '../server';
 
 class MockEventEmitter {
   constructor() {

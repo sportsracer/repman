@@ -1,12 +1,14 @@
 const Trait = require('traits.js');
 
-const Position = require('./position');
-const Rectangle = require('./rectangle');
+import Position from './position';
+import Rectangle from './rectangle';
 
 const playerMoveSpeed = 4;
 const playerTurnSpeed = Math.PI;
 const wallDimensions = new Position(1, 1);
 const topFlopCollectDistance = 1;
+
+type TTrait = typeof Trait;
 
 // state
 
@@ -19,15 +21,13 @@ const TStateful = Trait({
 /**
  * Construct a stateful trait, with getters and setters for individual properties. All game objects must store their
  * state using this trait so that it can be serialized between client and server.
- * @param {Object} state Initial state
- * @return {Trait}
  */
-function makeState(state) {
+function makeState(state: {[property: string]: any}): TTrait {
   return Trait({
-    get(property) {
+    get(property: string) {
       return state[property];
     },
-    set(property, value) {
+    set(property: string, value: any) {
       state[property] = value;
     },
     getState() {
@@ -38,18 +38,18 @@ function makeState(state) {
 
 /**
  * Helper method for adding a combined getter & setter method to a stateful trait.
- * @param {String} property Name of the property
- * @param {Object} defaultValue Default value which will be returned until a different value is set
- * @return {Trait} Trait with combined getter & setter method which takes either no (getter) or one (setter) argument
+ * @param property Name of the property
+ * @param defaultValue Default value which will be returned until a different value is set
+ * @return Trait with combined getter & setter method which takes either no (getter) or one (setter) argument
  */
-function hasProperty(property, defaultValue=undefined) {
+function hasProperty(property: string, defaultValue?: any): TTrait {
   return Trait.compose(
       TStateful,
       Trait({
-        [property](value) {
-          if (typeof(value) == 'undefined') {
+        [property](value: any): any {
+          if (value === undefined) {
             value = this.get(property);
-            return typeof(value) != 'undefined' ? value : defaultValue;
+            return value !== undefined ? value : defaultValue;
           }
           return this.set(property, value);
         },
@@ -59,10 +59,18 @@ function hasProperty(property, defaultValue=undefined) {
 
 // traits
 
+interface IHasPosition {
+  pos(): Position;
+}
+
 const THasPosition = Trait.compose(
     TStateful,
     hasProperty('pos'),
 );
+
+interface IMovable extends IHasPosition {
+  move(delta: number, gameBounds?: Rectangle, walls?: IWall[]): void;
+}
 
 const TMovable = Trait.compose(
     THasPosition,
@@ -73,17 +81,15 @@ const TMovable = Trait.compose(
     Trait({
       /**
        * Move and rotate this object, unless it would leave the game area or collide with a wall in the new position.
-       * @param {Number} delta
-       * @param {Rectangle} gameBounds
-       * @param {Object[]} walls
        */
-      move(delta, gameBounds=null, walls=[]) {
+      move(delta: number, gameBounds?: Rectangle, walls?: IWall[]) {
         const moveDirection = Position.fromAngle(this.angle());
         const moveDistance = this.moveSpeed() * delta;
         const newPos = this.pos().add(moveDirection.scale(moveDistance));
 
         // check for collisions
-        const outOfGame = gameBounds !== null && !gameBounds.contains(newPos);
+        const outOfGame = gameBounds !== undefined && !gameBounds.contains(newPos);
+        walls ||= [];
         this.colliding(
             walls.reduce(
                 (colliding, wall) => colliding || wall.collidesWith(newPos),
@@ -101,18 +107,18 @@ const TMovable = Trait.compose(
     }),
 );
 
+interface IControllableWithWasd extends IMovable {
+  input(w: boolean, a: boolean, s: boolean, d: boolean): void;
+}
+
 const TControllableWithWasd = Trait(
     {
       moveSpeed: Trait.required,
       turnSpeed: Trait.required,
       /**
        * Adjust move and turn speed based on state of arrow keys.
-       * @param {Boolean} w
-       * @param {Boolean} a
-       * @param {Boolean} s
-       * @param {Boolean} d
        */
-      input(w, a, s, d) {
+      input(w: boolean, a: boolean, s: boolean, d: boolean) {
         const move = Number(w);
         const turn = Number(d) - Number(a);
         this.moveSpeed(move * playerMoveSpeed);
@@ -123,21 +129,33 @@ const TControllableWithWasd = Trait(
 
 // objects
 
+export interface IWall extends IHasPosition {
+  collidesWith(otherPos: Position): boolean;
+};
+
 const TWall = Trait.compose(
     THasPosition,
     Trait({
-    /**
-     * Determine whether a point collides with this wall.
-     * @param {Position} otherPos
-     * @return {Boolean}
-     */
-      collidesWith(otherPos) {
+      /**
+       * Determine whether a point collides with this wall.
+       */
+      collidesWith(otherPos: Position): boolean {
         const pos = this.pos();
         const bounds = new Rectangle(pos, pos.add(wallDimensions));
         return bounds.contains(otherPos);
       },
     }),
 );
+
+export enum TopFlopType {
+  TOP = 'top',
+  FLOP = 'flop',
+}
+
+export interface ITopFlop extends IMovable {
+  randomize(): void;
+  topFlop(): TopFlopType;
+};
 
 const TTopFlop = Trait.compose(
     TMovable,
@@ -158,6 +176,12 @@ const TTopFlop = Trait.compose(
     }),
 );
 
+export interface IPlayer extends IControllableWithWasd {
+  name(): string;
+  points(): number;
+  collect(topsFlops: ITopFlop[]): ITopFlop[];
+};
+
 const TPlayer = Trait.compose(
     TMovable,
     TControllableWithWasd,
@@ -166,15 +190,13 @@ const TPlayer = Trait.compose(
     Trait({
       /**
        * Collect tops and/or flops that are close to this player, and adjust points accordingly.
-       * @param {Object[]} topsFlops
-       * @return {Object[]} The tops & flops which were collected.
        */
-      collect(topsFlops) {
+      collect(topsFlops: ITopFlop[]): ITopFlop[] {
         return topsFlops.filter(
             (topFlop) => this.pos().distanceTo(topFlop.pos()) <= topFlopCollectDistance,
         ).map(
             (topFlop) => {
-              const inc = topFlop.topFlop() === 'top' ? 1 : -1;
+              const inc = topFlop.topFlop() === TopFlopType.TOP ? 1 : -1;
               this.points(this.points() + inc);
               console.log('%s now has %d points', this.name(), this.points());
               return topFlop;
@@ -188,23 +210,16 @@ const TPlayer = Trait.compose(
 
 /**
  * Make a wall.
- * @param {Number} x
- * @param {Number} y
- * @return {Object}
  */
-function makeWall(x, y) {
+export function makeWall(x: number, y: number): IWall {
   const pos = new Position(x, y);
   return Trait.create(Object.prototype, Trait.compose(makeState({pos}), TWall));
 }
 
 /**
  * Make a top/flop object.
- * @param {Number} x
- * @param {Number} y
- * @param {String} topFlop Either 'top' or 'flop'
- * @return {Object}
  */
-function makeTopFlop(x, y, topFlop) {
+export function makeTopFlop(x: number, y: number, topFlop: TopFlopType): ITopFlop {
   const pos = new Position(x, y);
   const angle = Math.random() * Math.PI * 2;
   return Trait.create(Object.prototype, Trait.compose(makeState({pos, angle, topFlop}), TTopFlop));
@@ -212,16 +227,8 @@ function makeTopFlop(x, y, topFlop) {
 
 /**
  * Make a player.
- * @param {Number} x
- * @param {Number} y
- * @param {String} name
- * @return {Object}
  */
-function makePlayer(x, y, name) {
+export function makePlayer(x: number, y: number, name: string) : IPlayer {
   const pos = new Position(x, y);
   return Trait.create(Object.prototype, Trait.compose(makeState({pos, name}), TPlayer));
 }
-
-exports.makePlayer = makePlayer;
-exports.makeWall = makeWall;
-exports.makeTopFlop = makeTopFlop;

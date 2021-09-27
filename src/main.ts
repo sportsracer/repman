@@ -1,9 +1,9 @@
-const express = require('express');
-const http = require('http');
-const ws = require('ws');
+import express from 'express';
+import http from 'http';
+import ws from 'ws';
 
-const makeGame = require('./game').makeGame;
-const Server = require('./server').Server;
+import {makeGame} from './game';
+import Server from './server';
 
 // Create Repman game
 const game = makeGame();

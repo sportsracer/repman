@@ -1,14 +1,10 @@
 env:
-  browser: true
-  commonjs: true
   node: true
 extends:
   - google
-parser: "@babel/eslint-parser"
-parserOptions:
-  ecmaVersion: 12
-  sourceType: module
-  requireConfigFile: false
+parser: "@typescript-eslint/parser"
+plugins:
+  - "@typescript-eslint"
 rules:
 
   max-len:
@@ -16,9 +12,15 @@ rules:
     - code: 120
 
   valid-jsdoc:
-    - warn
+    - off
 
   new-cap:
     - error
     - capIsNewExceptions:
         - Trait
+
+  no-unused-vars:
+    - off
+
+  "@typescript-eslint/no-unused-vars":
+    - error

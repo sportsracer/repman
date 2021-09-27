@@ -1,5 +1,5 @@
-const Position = require('../position');
-const Rectangle = require('../rectangle');
+import Position from '../position';
+import Rectangle from '../rectangle';
 
 describe('Rectangle', () => {
   const rect = new Rectangle(new Position(1, 1), new Position(4, 2));

@@ -1,4 +1,4 @@
-const Position = require('../position');
+import Position from '../position';
 
 describe('Position', () => {
   it('can be added to another position', () => {

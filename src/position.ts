@@ -1,30 +1,23 @@
 /**
  * Two-dimensional position in game.
  */
-class Position {
+export default class Position {
   /**
-   * @param {Number} x
-   * @param {Number} y
+   * Create a new position from x and y coordinates.
    */
-  constructor(x, y) {
-    this.x = x;
-    this.y = y;
-  }
+  constructor(public x: number, public y: number) {}
 
   /**
-   * Position (0, 0)
-   * @return {Position}
+   * Create position (0, 0).
    */
-  static origin() {
+  static origin(): Position {
     return new Position(0, 0);
   }
 
   /**
    * Return a new position from adding `other` to this one.
-   * @param {Position} other
-   * @return {Position}
    */
-  add(other) {
+  add(other: Position): Position {
     return new Position(
         this.x + other.x,
         this.y + other.y,
@@ -32,11 +25,9 @@ class Position {
   }
 
   /**
-   * Return a new position from scaling this one by `scalar`.
-   * @param {Number} factor
-   * @return {Position}
+   * Return a new position from scaling this one by `factor`.
    */
-  scale(factor) {
+  scale(factor: number): Position {
     return new Position(
         this.x * factor,
         this.y * factor,
@@ -45,10 +36,8 @@ class Position {
 
   /**
    * Construct a position of unit length using `angle`.
-   * @param {Number} angle
-   * @return {Position}
    */
-  static fromAngle(angle) {
+  static fromAngle(angle: number): Position {
     return new Position(
         Math.cos(angle),
         Math.sin(angle),
@@ -57,14 +46,10 @@ class Position {
 
   /**
    * Calculate distance from this to other position.
-   * @param {Position} other
-   * @return {Number}
    */
-  distanceTo(other) {
+  distanceTo(other: Position): number {
     const x = other.x - this.x;
     const y = other.y - this.y;
     return Math.sqrt(x * x + y * y);
   }
 }
-
-module.exports = Position;
